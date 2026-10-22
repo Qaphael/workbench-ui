@@ -1,0 +1,20 @@
+# Git attributes
+#
+# `export-ignore` tells `git archive` to leave a path out of the generated
+# archive. The release package is built with `git archive`, so these rules are
+# what keeps the package the same shape on every machine, with no script
+# walking the tree and no chance of it wandering into .git.
+
+# The evaluation set is for the repository, not for the installed skill: it
+# carries the fixture app and the benchmark results, which would triple the
+# package for no runtime benefit.
+evals/ export-ignore
+
+# Build and dependency noise, in case any of it is ever tracked.
+node_modules/ export-ignore
+__pycache__/ export-ignore
+*.pyc export-ignore
+.DS_Store export-ignore
+
+# The release output directory.
+dist/ export-ignore
