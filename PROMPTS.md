@@ -113,8 +113,11 @@ STEP 6 - VERSION AND SHIP
   - update the README's file table if a new file shipped
   - commit (the message names the promoted rules) and push
   - rebuild the package and tag a release:
-      python -m scripts.package_skill <skill-dir> dist
-  - attach the rebuilt .skill to the release
+      node tools/package-skill.mjs
+    That uses `git archive`, so it packages the COMMITTED state and cannot
+    walk into `.git`. Do NOT point a tree-walking packager at the clone — it
+    will walk the whole object store and hang.
+  - attach the rebuilt dist/workbench-ui.skill to the release
 
 DO NOT
   - change the app. This task is READ-ONLY against the app: you read it, you do
@@ -191,7 +194,11 @@ STEP 4 - PROVE IT
 STEP 5 - VERSION AND SHIP
   - bump the VERSION file
   - add a row to PROGRESS.md
-  - commit, push, rebuild the .skill and attach it to a new release
+  - commit, push
+  - rebuild the package with `node tools/package-skill.mjs` and attach
+    dist/workbench-ui.skill to a new release
+    (git archive based: it packages the committed state and cannot walk into
+     .git. Do NOT point a tree-walking packager at the clone - it hangs.)
 
 DO NOT
   - change the "workbench" theme, or make it anything other than the default

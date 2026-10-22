@@ -247,6 +247,11 @@ things that matter: a new rule goes in **exactly one** reference file (never in
 `SKILL.md`, which is the map), and it arrives with a check that fails without
 it.
 
+To cut a release, run `node tools/package-skill.mjs`. It builds the package
+with `git archive` — which cannot contain a `.git`, so the build cannot walk
+into the object store and hang — packages the committed state, and then unpacks
+and verifies its own output.
+
 ## Reference files
 
 - `references/design-language.md` — the full visual contract: token set, shell

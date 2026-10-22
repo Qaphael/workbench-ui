@@ -70,6 +70,8 @@ implementations.
 | `PROMPTS.md` | Copy-paste prompts for **maintaining this skill** — folding new app structure into it, or adding a theme |
 | `PROGRESS.md` | The change log: what each version added, its evidence, and the app commit it was synced from |
 | `VERSION` | The single source of truth for the skill's version |
+| `tools/package-skill.mjs` | Builds the distributable `.skill` with `git archive` and verifies the result |
+| `.gitattributes` | Decides what `git archive` leaves out — the evaluation set, build noise |
 
 ## Keeping the skill in sync
 
@@ -105,6 +107,27 @@ npx skills update -g
 
 `PROMPTS.md` also has a **P2** prompt for adding a new theme, and documents the
 rule-record shape both prompts use.
+
+### Releasing
+
+The distributable package is built with `git archive`, not by walking the
+working tree:
+
+```bash
+node tools/package-skill.mjs        # -> dist/workbench-ui.skill
+```
+
+That matters for two reasons. A tree-walking packager has to be told what to
+skip, and it will eventually walk into `.git` and hang — which is exactly what
+happened to the first attempt here. `git archive` cannot: there is no `.git`
+in an archive. It also packages the **committed** state, so a release always
+matches a commit, and an uncommitted change is reported rather than silently
+shipped or silently dropped.
+
+What is left out is decided by `.gitattributes` (`export-ignore`), in one
+place, so it applies to any `git archive` of this repo. The script unpacks its
+own output and fails if `SKILL.md` is missing, if the evaluation set leaked
+in, or if any path escaped the skill folder.
 
 ## A quick example
 
