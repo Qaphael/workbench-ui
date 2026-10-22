@@ -1,0 +1,46 @@
+<!--
+  Pre-paint theme resolution.
+
+  Copy this inline into <head>, BEFORE any stylesheet. It stamps data-theme on
+  <html> before the first paint, so there is never a flash of the wrong theme.
+
+  Why inline and not a module: a module is deferred, so it runs after the first
+  paint — which is exactly the flash you are trying to avoid.
+
+  The server is the source of truth for the theme (persist it there). This
+  localStorage read is only a pre-paint CACHE. The try/catch matters: Safari's
+  private mode throws on localStorage access, and an uncaught throw here would
+  leave the page unstyled.
+-->
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+    } catch (e) {
+      /* private mode / storage disabled: fall through to the system theme */
+    }
+  })();
+</script>
+
+<!--
+  The CSS resolution order this depends on:
+
+    1. :root                                          -> light, always
+    2. @media (prefers-color-scheme: dark) {
+         :root:not([data-theme="light"]) { ... }      -> dark, if the OS asks
+       }
+    3. :root[data-theme="dark"] { ... }              -> dark, if forced
+
+  'system' leaves data-theme off entirely, so the media query decides.
+  'light' sets data-theme="light", which the :not() guard excludes.
+  'dark' sets data-theme="dark", which rule 3 picks up.
+
+  The two dark blocks MUST be identical — assert it in a unit test.
+
+  IMPORTANT: the entry document must be served with `Cache-Control: no-store`.
+  A cached index.html would skip this script and leave the page holding the
+  previous session's theme.
+-->

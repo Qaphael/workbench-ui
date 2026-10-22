@@ -1,0 +1,283 @@
+/* ============================================================================
+   DESIGN TOKENS — the copy-paste token layer.
+
+   Every colour, space, radius, type size, shadow and z-index the UI uses
+   lives here. Nothing outside this file may contain a colour literal (the
+   `lint:colors` script enforces that).
+
+   ── THE THREE RULES ────────────────────────────────────────────────────────
+
+   1. FROZEN LIGHT. The `:root` block is the approved light palette. Do NOT
+      edit a light value to make dark mode work — add a dark-only override
+      instead. An existing app's identity, the user's screenshots and any brand
+      guidance all point at those values; changing one silently is a regression
+      wearing a redesign's clothes. The frozen palette is pinned by a unit test
+      (see theme-tokens.test.ts), so a deliberate change has to be visible.
+
+   2. DARK IS LAYERED SURFACES. Dark mode builds hierarchy from surface
+      luminance, not from borders:  canvas < bg < panel < panel-2 < bg-hover.
+      Borders are hairlines meant to be almost invisible. The canvas goes to
+      pure black so the paper-white page is the brightest thing on screen.
+
+   3. INK IS NOT CHROME. `--color-paper`, `--color-stamp` and `--color-brand`
+      describe *content*, not interface, so they are identical in both themes
+      and are deliberately NOT overridden in the dark blocks. A printed page
+      must not darken; a stamp keeps its ink; the logo keeps its brand.
+
+   ── HOW A THEME RESOLVES ──────────────────────────────────────────────────
+
+   1. `:root`                       → the light palette (always applies)
+   2. `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`
+      → dark, when the OS asks for it and the user has not forced light
+   3. `:root[data-theme="dark"]`    → dark, when the user forced it
+
+   `system` leaves `data-theme` off entirely, so the media query decides.
+   `light` sets `data-theme="light"`, which the `:not()` guard excludes.
+   The two dark blocks MUST stay identical — a unit test asserts that.
+
+   ── CHROME ROLES ──────────────────────────────────────────────────────────
+
+   The `--color-shell`, `--color-field`, `--color-button-2` and `--color-seg*`
+   tokens are indirections. Light resolves them to bordered, flat surfaces;
+   dark resolves them to filled, borderless controls. That is what lets an
+   entire class of controls change character in one theme by editing one block,
+   with no component touched. They are applied in only a handful of places —
+   that is the point.
+   ========================================================================== */
+
+/* ── Light theme (default). Frozen — see rule 1. ─────────────────────────── */
+:root {
+  /* Surfaces */
+  --color-bg: #eceee9;            /* app background (the mat around the frame) */
+  --color-panel: #fbfbf8;         /* raised panel / card surface */
+  --color-panel-2: #f0f1ec;       /* one step down: tracks, nav bars, hover */
+  --color-border: #d5d8d0;        /* hairline */
+
+  /* Ink */
+  --color-text: #1f2430;          /* body text */
+  --color-muted: #5c6472;         /* secondary text — >= 4.5:1 on every surface */
+
+  /* Semantics */
+  --color-primary: #26324d;       /* brand navy; the one filled accent */
+  --color-on-primary: #fff;       /* text/icon on the primary fill */
+  --color-selection: #2f5bd6;     /* focus ring + selection ring */
+  --color-danger: #c8321f;
+  --color-success: #17794f;
+  --color-warning: #7a5400;       /* readable amber on light */
+  --color-primary-tint: #e3e8f3;  /* tinted chips */
+  --color-warning-tint: #f7ecd6;
+
+  /* More surfaces */
+  --color-canvas: #d9dcd4;        /* the well the work sits in */
+  --color-border-strong: #b4baac; /* hairline on hover */
+  --color-bg-hover: #e3e6de;      /* hover fill on rows and buttons */
+
+  /* Editor overlays, drawn on top of the always-white page */
+  --color-guide: #0097a7;
+  --color-guide-active: #ff2d95;
+  --color-spacing: #ff8a00;
+  --color-overlay: #000000;       /* scrim behind a zoom read-out */
+  --color-on-overlay: #ffffff;
+
+  /* ── Ink tokens: identical in BOTH themes. See rule 3. ─────────────────── */
+  --color-paper: #ffffff;         /* the page itself — a PDF must not darken */
+  --color-stamp: #d00000;         /* the printed serial number */
+  --color-brand: #26324d;         /* the brand mark */
+
+  /* ── Spacing scale ─────────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ── Radii ─────────────────────────────────────────────────────────────── */
+  --radius-sm: 6px;               /* controls */
+  --radius-md: 8px;               /* panels, cards */
+  --radius-lg: 12px;              /* large surfaces */
+  --radius-pill: 999px;
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-family: "Segoe UI", system-ui, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 13px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;          /* empty states / onboarding headings */
+  --font-size-3xl: 28px;
+
+  /* ── Motion ────────────────────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+
+  /* ── Elevation ─────────────────────────────────────────────────────────── */
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.18);
+
+  /* ── Z-index ───────────────────────────────────────────────────────────── */
+  --z-dropdown: 100;
+  --z-tooltip: 400;
+  --z-modal: 200;
+  --z-toast: 300;
+
+  color-scheme: light;
+}
+
+/* ============================================================================
+   CHROME ROLES + CARD GEOMETRY
+
+   These live in their own `:root` block so the frozen colour palette above
+   stays byte-identical: the role tokens are indirections and the geometry
+   tokens are not colours, so neither belongs in the frozen fingerprint.
+   ========================================================================== */
+:root {
+  /* ONE geometry for every card in the app. A card is inset by one gutter
+     from the shell edges and from its neighbours, and every card — inspector,
+     run controls, History summary, History table — shares these three. When
+     they share a geometry, the app reads as one system instead of a set of
+     panels that happen to be next to each other. */
+  --gutter: 6px;                  /* the gap between the shell edge and a card */
+  --radius-card: var(--radius-md);/* 8px — the closest token to a ~6px card */
+  --shadow-card: var(--shadow-md);/* light: a soft shadow; dark: none */
+
+  /* The chrome surface: header, tool rail, status bar. In light it is the
+     off-white panel so the chrome stays quiet; in dark it drops to the app
+     background so the *cards* are the only raised things on screen. */
+  --color-shell: var(--color-panel);
+
+  /* Filled controls. Light: flat panel with a border. Dark: one step above
+     panel-2, borderless, with the border returning on hover/focus. */
+  --color-field: var(--color-panel);
+  --color-field-border: var(--color-border);
+  --color-field-border-hover: var(--color-border);
+
+  /* Secondary buttons. */
+  --color-button-2: var(--color-panel-2);
+  --color-button-2-border: var(--color-border);
+  --color-button-2-hover: var(--color-border);
+  --color-button-2-hover-border: var(--color-muted);
+
+  /* Segmented controls: a recessed track with a raised active segment. */
+  --color-seg: var(--color-panel-2);
+  --color-seg-border: var(--color-border);
+  --color-seg-active: var(--color-panel);
+}
+
+/* ============================================================================
+   DARK THEME — system preference, unless the user forced light.
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* Layered charcoal. Darkest first: canvas < bg < panel < panel-2 < hover. */
+    --color-bg: #111111;
+    --color-panel: #181818;
+    --color-panel-2: #202020;
+    --color-canvas: #000000;
+    --color-border: #2c2c2c;
+    --color-border-strong: #3d3d3d;
+    --color-bg-hover: #242424;
+    --color-text: #f2f2f2;
+    --color-muted: #a6a6a6;
+
+    --color-primary: #8fa8ff;
+    --color-on-primary: #10141c;
+    --color-selection: #6f95ff;
+    --color-danger: #ff7a63;
+    --color-success: #4cc38a;
+    --color-warning: #e0b050;
+    --color-primary-tint: #1e2433;
+    --color-warning-tint: #2e281e;
+
+    /* Editor overlays stay saturated so they read on the white page. */
+    --color-guide: #0097a7;
+    --color-guide-active: #ff2d95;
+    --color-spacing: #ff8a00;
+    --color-overlay: #000000;
+    --color-on-overlay: #ffffff;
+
+    /* NOTE: --color-paper, --color-stamp and --color-brand are intentionally
+       absent. They are inherited from `:root` — ink is theme-independent. */
+
+    /* Chrome roles: the shell recedes to the app background so the cards are
+       the only raised surfaces, and the controls become filled and borderless
+       with their border returning on hover/focus. */
+    --color-shell: var(--color-bg);
+    --color-field: #262626;
+    --color-field-border: transparent;
+    --color-field-border-hover: var(--color-border-strong);
+    --color-button-2: #262626;
+    --color-button-2-border: transparent;
+    --color-button-2-hover: #303030;
+    --color-button-2-hover-border: transparent;
+    --color-seg: var(--color-bg);
+    --color-seg-border: transparent;
+    --color-seg-active: #262626;
+
+    /* Dark cards are told apart by surface, not elevation. */
+    --shadow-card: none;
+
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+   DARK THEME — forced by the user via the theme switch.
+   MUST stay identical to the system-dark block above; a unit test asserts it.
+   ========================================================================== */
+:root[data-theme="dark"] {
+  --color-bg: #111111;
+  --color-panel: #181818;
+  --color-panel-2: #202020;
+  --color-canvas: #000000;
+  --color-border: #2c2c2c;
+  --color-border-strong: #3d3d3d;
+  --color-bg-hover: #242424;
+  --color-text: #f2f2f2;
+  --color-muted: #a6a6a6;
+
+  --color-primary: #8fa8ff;
+  --color-on-primary: #10141c;
+  --color-selection: #6f95ff;
+  --color-danger: #ff7a63;
+  --color-success: #4cc38a;
+  --color-warning: #e0b050;
+  --color-primary-tint: #1e2433;
+  --color-warning-tint: #2e281e;
+
+  --color-guide: #0097a7;
+  --color-guide-active: #ff2d95;
+  --color-spacing: #ff8a00;
+  --color-overlay: #000000;
+  --color-on-overlay: #ffffff;
+
+  --color-shell: var(--color-bg);
+  --color-field: #262626;
+  --color-field-border: transparent;
+  --color-field-border-hover: var(--color-border-strong);
+  --color-button-2: #262626;
+  --color-button-2-border: transparent;
+  --color-button-2-hover: #303030;
+  --color-button-2-hover-border: transparent;
+  --color-seg: var(--color-bg);
+  --color-seg-border: transparent;
+  --color-seg-active: #262626;
+
+  --shadow-card: none;
+
+  color-scheme: dark;
+}
+
+/* ============================================================================
+   EDITOR INK — drawn on the always-white page.
+
+   Theme-independent, like the guide colours: a marker must keep the same
+   contrast on paper whether the surrounding chrome is light or dark. The
+   values equal the light palette's primary/selection, so light mode is
+   unchanged and dark mode stops drawing pale blue on white.
+   ========================================================================== */
+:root {
+  --color-slot-box: #26324d;
+  --color-slot-selected: #2f5bd6;
+}

@@ -1,0 +1,54 @@
+{
+  "skill_name": "workbench-ui",
+  "evals": [
+    {
+      "id": 0,
+      "name": "full-redesign-dark-mode",
+      "prompt": "Our Ledgerly invoicing app looks like it was made in 2015 — it's all #2f4f7a and #ffffff, there's no dark mode at all, and honestly I can't sleep. I'd like it to look like a proper modern desktop tool: dark mode, proper card surfaces, the whole thing. But I don't want to change how it actually works, and the light theme has to stay recognizable because our customers recognise it. Can you do the redesign?",
+      "expected_output": "The app gains a token layer, a dark theme, a card-based shell, and a design/migration document. The original light palette values are preserved and the app's behaviour and visible strings are unchanged.",
+      "files": [],
+      "expectations": [
+        "A CSS token stylesheet exists in the app declaring at least 20 `--color-*` custom properties",
+        "All ten original light palette hex values are still present somewhere in the app's CSS: #f4f5f2, #ffffff, #eceef0, #dfe3dc, #23282f, #6b7280, #2f4f7a, #b42318, #16794a, #e7eae3",
+        "No hex colour literal remains outside the token stylesheet (run the colour lint over the app's src/ tree — it must report OK or exit 0)",
+        "A dark theme is defined with BOTH a `@media (prefers-color-scheme: dark)` block and a `:root[data-theme=\"dark\"]` block",
+        "Card geometry tokens exist: `--gutter`, `--radius-card` and `--shadow-card`",
+        "Chrome role tokens exist: `--color-shell`, `--color-field`, `--color-button-2` and `--color-seg`",
+        "The dark theme does NOT override the ink tokens `--color-paper`, `--color-stamp` and `--color-brand`",
+        "Every original user-visible string is still present in the app source: 'Ledgerly', 'New invoice', 'Internal notes', 'Owner', 'No invoices match your search.', 'Search invoices', 'Mark as paid'",
+        "A design or migration document exists in the app that describes the phases, the decisions taken and a definition of done"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "primitives-layer",
+      "prompt": "We keep copy-pasting the same button markup, the same labelled-field markup and the same tab markup all over Ledgerly, and they drift every single time — the padding's different on one screen, the focus ring's missing on another. Can you set up a proper shared set of UI components so the screens stop drifting? I'd also like somewhere to eyeball all the variants at once, but it must not ship to production.",
+      "expected_output": "A primitives layer (Button, IconButton, Field, inputs, Select, SegmentedControl, Tabs, Panel, EmptyState, Badge) with a written contract, plus a dev-only gallery excluded from production. The app's visible strings are unchanged.",
+      "files": [],
+      "expectations": [
+        "A shared primitives directory exists (e.g. src/components/ui/) containing at least 6 primitive component files",
+        "The primitives include a Button, a labelled input wrapper (Field) or labelled input components, and one of Tabs or SegmentedControl",
+        "A contract document states the 'adopt, don't re-style' rule — i.e. that the primitives own the styling and screens must not hand-roll their own markup",
+        "No hex colour literal appears in any primitive component file",
+        "A dev-only showcase exists (a component, route or file whose name contains 'gallery', 'styleguide', 'showcase' or similar) that is excluded from production — for example behind `import.meta.env.DEV`, or a route that is not reachable from the app's navigation",
+        "The original user-visible strings are still present in the app source: 'Ledgerly', 'New invoice', 'Internal notes', 'Owner', 'No invoices match your search.', 'Search invoices', 'Mark as paid'",
+        "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "neutral-refactor",
+      "prompt": "src/App.tsx in Ledgerly is one giant file — the toolbar, the invoice table, the side panel, the status footer and the modal all live in it and it's unreadable. Split it into sensible pieces so the next person can find things. But I want to be sure this is purely a structural change: nothing may look different and nothing may break.",
+      "expected_output": "App.tsx is split into several modules with the behaviour unchanged, no new colours introduced, all visible strings preserved, and some recorded proof that the change was style-neutral.",
+      "files": [],
+      "expectations": [
+        "src/App.tsx is shorter than the original file, and the toolbar, invoice table, side panel, status footer and modal are no longer all defined inside App.tsx",
+        "At least two new source modules were created under src/",
+        "No hex colour literal was introduced into any file under src/ that was not already there",
+        "Every original user-visible string is still present in the app source: 'Ledgerly', 'New invoice', 'Internal notes', 'Owner', 'No invoices match your search.', 'Search invoices', 'Mark as paid', 'Create a new invoice?'",
+        "The stylesheet src/styles.css is unchanged from the original, OR the outputs/RESULT.md records an explicit, concrete proof-of-neutrality statement (a hash, a byte count, or an equivalent measured claim) rather than merely asserting that nothing changed",
+        "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)"
+      ]
+    }
+  ]
+}

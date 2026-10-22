@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Scratch from running the evaluation
+evals/.work/
+evals/**/*.log
+__pycache__/
+*.pyc
+
+# Packaged skill output (built by the release workflow)
+*.skill

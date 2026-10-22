@@ -1,0 +1,409 @@
+{
+  "metadata": {
+    "skill_name": "workbench-ui",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "the model powering this session",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-22T00:48:06Z",
+    "evals_run": [
+      0,
+      1,
+      2
+    ],
+    "runs_per_configuration": 1,
+    "note": "Wall-clock time is ESTIMATED from file mtimes (the task notifications in this harness did not carry token counts or durations). Token counts are therefore 0. Treat the time column as directional, not precise."
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 2907,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A CSS token stylesheet exists in the app declaring at least 20 `--color-*` custom properties",
+          "passed": true,
+          "evidence": "Found 1 file(s) with >=20 --color-* declarations: src/styles/tokens.css (127)"
+        },
+        {
+          "text": "All ten original light palette hex values are still present somewhere in the app's CSS: #f4f5f2, #ffffff, #eceef0, #dfe3dc, #23282f, #6b7280, #2f4f7a, #b42318, #16794a, #e7eae3",
+          "passed": true,
+          "evidence": "All 10 original light palette values found in the app's CSS."
+        },
+        {
+          "text": "No hex colour literal remains outside the token stylesheet (run the colour lint over the app's src/ tree â€” it must report OK or exit 0)",
+          "passed": true,
+          "evidence": "lint:colors exit 0 â€” lint:colors OK - no hard-coded colours outside the design tokens (src\\styles\\tokens.css)."
+        },
+        {
+          "text": "A dark theme is defined with BOTH a `@media (prefers-color-scheme: dark)` block and a `:root[data-theme=\"dark\"]` block",
+          "passed": true,
+          "evidence": "prefers-color-scheme: dark block â†’ present; :root[data-theme=\"dark\"] block â†’ present"
+        },
+        {
+          "text": "Card geometry tokens exist: `--gutter`, `--radius-card` and `--shadow-card`",
+          "passed": true,
+          "evidence": "All three geometry tokens declared."
+        },
+        {
+          "text": "Chrome role tokens exist: `--color-shell`, `--color-field`, `--color-button-2` and `--color-seg`",
+          "passed": true,
+          "evidence": "All four chrome role tokens declared."
+        },
+        {
+          "text": "The dark theme does NOT override the ink tokens `--color-paper`, `--color-stamp` and `--color-brand`",
+          "passed": true,
+          "evidence": "Ink tokens are inherited, not overridden in dark. Declared in the token layer: --color-brand."
+        },
+        {
+          "text": "Every original user-visible string is still present in the app source: Ledgerly, New invoice, Internal notes, Owner, No invoices match your search., Search invoices, Mark as paid",
+          "passed": true,
+          "evidence": "All 7 visible strings found in src/."
+        },
+        {
+          "text": "A design or migration document exists in the app that describes the phases, the decisions taken and a definition of done",
+          "passed": true,
+          "evidence": "Found migration document(s): docs/UI_PLAN.md"
+        }
+      ],
+      "notes": [],
+      "eval_name": "full-redesign-dark-mode"
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 3358.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A shared primitives directory exists (e.g. src/components/ui/) containing at least 6 primitive component files",
+          "passed": true,
+          "evidence": "Found primitives in src/components/ui â€” 11 primitive component file(s): Badge.tsx, Button.tsx, EmptyState.tsx, Field.tsx, IconButton.tsx, NumberInput.tsx, Panel.tsx, SegmentedControl.tsx, Select.tsx, Tabs.tsx, TextInput.tsx"
+        },
+        {
+          "text": "The primitives include a Button, a labelled input wrapper (Field) or labelled input components, and one of Tabs or SegmentedControl",
+          "passed": true,
+          "evidence": "Button â†’ yes; Field/inputs â†’ yes; Tabs/SegmentedControl â†’ yes. Files: Badge.tsx, Button.tsx, EmptyState.tsx, Field.tsx, IconButton.tsx, NumberInput.tsx, Panel.tsx, SegmentedControl.tsx, Select.tsx, Tabs.tsx, TextInput.tsx"
+        },
+        {
+          "text": "A contract document states the 'adopt, don't re-style' rule â€” i.e. that the primitives own the styling and screens must not hand-roll their own markup",
+          "passed": true,
+          "evidence": "Contract documented in docs/UI_PLAN.md, src/components/ui/README.md (uses the canonical \"adopt, don't re-style\" phrasing)."
+        },
+        {
+          "text": "No hex colour literal appears in any primitive component file",
+          "passed": true,
+          "evidence": "No hex literals in 11 primitive file(s)."
+        },
+        {
+          "text": "A dev-only showcase exists (a component, route or file whose name contains 'gallery', 'styleguide', 'showcase' or similar) that is excluded from production â€” for example behind `import.meta.env.DEV`, or a route that is not reachable from the app's navigation",
+          "passed": true,
+          "evidence": "Showcase file(s): gallery.html, scripts/check-gallery.mjs, src/dev/gallery-main.tsx, src/dev/gallery.css, src/dev/gallery.tsx. Dev-guarded â†’ no; not statically imported by the entry point â†’ yes."
+        },
+        {
+          "text": "The original user-visible strings are still present in the app source: Ledgerly, New invoice, Internal notes, Owner, No invoices match your search., Search invoices, Mark as paid",
+          "passed": true,
+          "evidence": "All 7 visible strings found in src/."
+        },
+        {
+          "text": "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)",
+          "passed": true,
+          "evidence": "dependencies: react, react-dom â†’ unchanged"
+        }
+      ],
+      "notes": [],
+      "eval_name": "primitives-layer"
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 2476.9,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "src/App.tsx is shorter than the original file, and the toolbar, invoice table, side panel, status footer and modal are no longer all defined inside App.tsx",
+          "passed": true,
+          "evidence": "App.tsx is 58 lines (original 169); all five UI regions still inline â†’ no."
+        },
+        {
+          "text": "At least two new source modules were created under src/",
+          "passed": true,
+          "evidence": "Original modules: App.tsx, main.tsx, types.ts. New modules added: components/FilterBar.tsx, components/InvoiceTable.tsx, components/NewInvoiceDialog.tsx, components/SidePanel.tsx, components/StatusBar.tsx, components/Toolbar.tsx, data/invoices.ts, hooks/useInvoiceFilters.ts, hooks/useInvoiceSelection.ts, hooks/useNewInvoiceDialog.ts, lib/format.ts, lib/invoices.ts."
+        },
+        {
+          "text": "No hex colour literal was introduced into any file under src/ that was not already there",
+          "passed": true,
+          "evidence": "No new hex literal introduced (18 distinct value(s), all pre-existing)."
+        },
+        {
+          "text": "Every original user-visible string is still present in the app source: Ledgerly, New invoice, Internal notes, Owner, No invoices match your search., Search invoices, Mark as paid, Create a new invoice?",
+          "passed": true,
+          "evidence": "All 8 visible strings found in src/."
+        },
+        {
+          "text": "The stylesheet src/styles.css is unchanged from the original, OR the outputs/RESULT.md records an explicit, concrete proof-of-neutrality statement (a hash, a byte count, or an equivalent measured claim) rather than merely asserting that nothing changed",
+          "passed": true,
+          "evidence": "src/styles.css changed (4433 â†’ 326 bytes) but RESULT.md records a concrete measured proof."
+        },
+        {
+          "text": "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)",
+          "passed": true,
+          "evidence": "dependencies: react, react-dom â†’ unchanged"
+        }
+      ],
+      "notes": [],
+      "eval_name": "neutral-refactor"
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.56,
+        "passed": 5,
+        "failed": 4,
+        "total": 9,
+        "time_seconds": 2030.1,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A CSS token stylesheet exists in the app declaring at least 20 `--color-*` custom properties",
+          "passed": true,
+          "evidence": "Found 1 file(s) with >=20 --color-* declarations: src/styles/tokens.css (99)"
+        },
+        {
+          "text": "All ten original light palette hex values are still present somewhere in the app's CSS: #f4f5f2, #ffffff, #eceef0, #dfe3dc, #23282f, #6b7280, #2f4f7a, #b42318, #16794a, #e7eae3",
+          "passed": true,
+          "evidence": "All 10 original light palette values found in the app's CSS."
+        },
+        {
+          "text": "No hex colour literal remains outside the token stylesheet (run the colour lint over the app's src/ tree â€” it must report OK or exit 0)",
+          "passed": true,
+          "evidence": "lint:colors exit 0 â€” lint:colors OK - no hard-coded colours outside the design tokens (src\\styles\\tokens.css)."
+        },
+        {
+          "text": "A dark theme is defined with BOTH a `@media (prefers-color-scheme: dark)` block and a `:root[data-theme=\"dark\"]` block",
+          "passed": true,
+          "evidence": "prefers-color-scheme: dark block â†’ present; :root[data-theme=\"dark\"] block â†’ present"
+        },
+        {
+          "text": "Card geometry tokens exist: `--gutter`, `--radius-card` and `--shadow-card`",
+          "passed": false,
+          "evidence": "Missing geometry token(s): --radius-card"
+        },
+        {
+          "text": "Chrome role tokens exist: `--color-shell`, `--color-field`, `--color-button-2` and `--color-seg`",
+          "passed": false,
+          "evidence": "Missing chrome role token(s): --color-shell, --color-field, --color-button-2, --color-seg"
+        },
+        {
+          "text": "The dark theme does NOT override the ink tokens `--color-paper`, `--color-stamp` and `--color-brand`",
+          "passed": false,
+          "evidence": "Ink tokens are inherited, not overridden in dark. Declared in the token layer: none."
+        },
+        {
+          "text": "Every original user-visible string is still present in the app source: Ledgerly, New invoice, Internal notes, Owner, No invoices match your search., Search invoices, Mark as paid",
+          "passed": true,
+          "evidence": "All 7 visible strings found in src/."
+        },
+        {
+          "text": "A design or migration document exists in the app that describes the phases, the decisions taken and a definition of done",
+          "passed": false,
+          "evidence": "Found .md file(s) (docs/DECISIONS.md, docs/DESIGN.md) but none covers phases + decisions + definition of done."
+        }
+      ],
+      "notes": [],
+      "eval_name": "full-redesign-dark-mode"
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 1366.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A shared primitives directory exists (e.g. src/components/ui/) containing at least 6 primitive component files",
+          "passed": true,
+          "evidence": "Found primitives in src/components â€” 9 primitive component file(s): Badge.tsx, Button.tsx, Dialog.tsx, EmptyState.tsx, Field.tsx, Select.tsx, Tabs.tsx, Textarea.tsx, TextInput.tsx"
+        },
+        {
+          "text": "The primitives include a Button, a labelled input wrapper (Field) or labelled input components, and one of Tabs or SegmentedControl",
+          "passed": true,
+          "evidence": "Button â†’ yes; Field/inputs â†’ yes; Tabs/SegmentedControl â†’ yes. Files: Badge.tsx, Button.tsx, Dialog.tsx, EmptyState.tsx, Field.tsx, Select.tsx, Tabs.tsx, Textarea.tsx, TextInput.tsx"
+        },
+        {
+          "text": "A contract document states the 'adopt, don't re-style' rule â€” i.e. that the primitives own the styling and screens must not hand-roll their own markup",
+          "passed": true,
+          "evidence": "Contract documented in docs/PRIMITIVES.md (states the rule in substance, but not with the canonical phrasing)."
+        },
+        {
+          "text": "No hex colour literal appears in any primitive component file",
+          "passed": true,
+          "evidence": "No hex literals in 9 primitive file(s)."
+        },
+        {
+          "text": "A dev-only showcase exists (a component, route or file whose name contains 'gallery', 'styleguide', 'showcase' or similar) that is excluded from production â€” for example behind `import.meta.env.DEV`, or a route that is not reachable from the app's navigation",
+          "passed": true,
+          "evidence": "Showcase file(s): src/styleguide/Styleguide.css, src/styleguide/Styleguide.tsx. Dev-guarded â†’ yes; not statically imported by the entry point â†’ yes."
+        },
+        {
+          "text": "The original user-visible strings are still present in the app source: Ledgerly, New invoice, Internal notes, Owner, No invoices match your search., Search invoices, Mark as paid",
+          "passed": true,
+          "evidence": "All 7 visible strings found in src/."
+        },
+        {
+          "text": "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)",
+          "passed": true,
+          "evidence": "dependencies: react, react-dom â†’ unchanged"
+        }
+      ],
+      "notes": [],
+      "eval_name": "primitives-layer"
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 1689.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "src/App.tsx is shorter than the original file, and the toolbar, invoice table, side panel, status footer and modal are no longer all defined inside App.tsx",
+          "passed": true,
+          "evidence": "App.tsx is 57 lines (original 169); all five UI regions still inline â†’ no."
+        },
+        {
+          "text": "At least two new source modules were created under src/",
+          "passed": true,
+          "evidence": "Original modules: App.tsx, main.tsx, types.ts. New modules added: components/ConfirmModal.tsx, components/FilterRow.tsx, components/InvoiceTable.tsx, components/SidePanel.tsx, components/StatusBar.tsx, components/Toolbar.tsx, data/invoices.ts, hooks/useVisibleInvoices.ts, lib/format.ts."
+        },
+        {
+          "text": "No hex colour literal was introduced into any file under src/ that was not already there",
+          "passed": true,
+          "evidence": "No new hex literal introduced (18 distinct value(s), all pre-existing)."
+        },
+        {
+          "text": "Every original user-visible string is still present in the app source: Ledgerly, New invoice, Internal notes, Owner, No invoices match your search., Search invoices, Mark as paid, Create a new invoice?",
+          "passed": true,
+          "evidence": "All 8 visible strings found in src/."
+        },
+        {
+          "text": "The stylesheet src/styles.css is unchanged from the original, OR the outputs/RESULT.md records an explicit, concrete proof-of-neutrality statement (a hash, a byte count, or an equivalent measured claim) rather than merely asserting that nothing changed",
+          "passed": true,
+          "evidence": "src/styles.css is byte-identical to the original (4433 bytes)."
+        },
+        {
+          "text": "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)",
+          "passed": true,
+          "evidence": "dependencies: react, react-dom â†’ unchanged"
+        }
+      ],
+      "notes": [],
+      "eval_name": "neutral-refactor"
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1,
+        "stddev": 0,
+        "min": 1,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 2914.1,
+        "stddev": 440.7929,
+        "min": 2476.9,
+        "max": 3358.4
+      },
+      "tokens": {
+        "mean": 0,
+        "stddev": 0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.8533,
+        "stddev": 0.254,
+        "min": 0.56,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 1695.3,
+        "stddev": 331.8893,
+        "min": 1366.4,
+        "max": 2030.1
+      },
+      "tokens": {
+        "mean": 0,
+        "stddev": 0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.15",
+      "time_seconds": "+1218.8",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "Eval 0 (full-redesign-dark-mode) is the only discriminating eval: with_skill 9/9 vs without_skill 5/9.",
+    "The four assertions the baseline fails are exactly the skill's distinctive VOCABULARY, not the outcome: the chrome-role indirections (--color-shell / --color-field / --color-button-2 / --color-seg), the card geometry tokens (--gutter / --radius-card / --shadow-card), the theme-independent ink tokens (--color-paper / --color-stamp / --color-brand), and the migration plan document (phases + decisions + definition of done).",
+    "The baseline DID build a token layer, freeze the light palette, add a dark theme with both resolution blocks, add a colour lint and split the god component. So the skill's contribution here is not \"do tokens\" — it is \"use these roles and this vocabulary, and produce the plan\".",
+    "Evals 1 and 2 are NON-DISCRIMINATING: both configurations score 100%. The baseline for eval 1 built its own token layer, an 11-component primitives set, a styleguide and a 16-check verification script; the baseline for eval 2 built a real React sandbox from the npm cache and diffed the markup across all 448 reachable states. Keep these assertions as regression guards, but they carry no signal about the skill.",
+    "A structural difference the assertions do NOT capture: the with_skill eval-2 run also split the stylesheet into ten ordered feature files (the method's Phase 7), while the baseline left styles.css byte-identical. An assertion on \"the stylesheet was split into ordered feature files\" would discriminate eval 2.",
+    "The with_skill runs used the skill's shipped lint-colors.mjs and contrast-check.mjs directly; the baselines wrote their own tooling. That is the \"ship ready-to-copy artifacts\" decision paying off — the skill run had working verification from minute one.",
+    "TIME COST: with_skill runs take roughly 72% longer (mean 2914s vs 1695s, both mtime estimates). Much of that is reading the skill (SKILL.md + 4 references + 7 assets, about 2,500 lines). A shorter \"fast path\" summary would cut this without losing the method.",
+    "Both configurations behaved honestly about their limits: each stated plainly that no browser, no npm install and no type-check were available on this host, and each recorded the exact commands to run once dependencies exist."
+  ]
+}
