@@ -230,6 +230,23 @@ names and the frozen palette values, but keep the shape.
 | `assets/theme-boot.html` | `index.html` | The pre-paint theme script, so there is never a flash of the wrong theme |
 | `templates/UI_PLAN.md` | `docs/UI_PLAN.md` | The plan document: phases, decision log, progress log, test matrix, definition of done |
 
+## Keeping this skill in sync
+
+This skill was extracted from a real application, and that application keeps
+moving — so the skill needs a way to keep up, without absorbing the
+application's specifics. Three files make that work:
+
+| File | What it is |
+|---|---|
+| `PROMPTS.md` | Copy-paste prompts for maintaining the skill: fold the application's new structure into it, or add a theme. Each has a **promotion gate** — a rule ships only if it is a rule (not an implementation detail), its "why" does not name the application, and it has an automatable check. |
+| `VERSION` | The single source of truth for the skill's version. |
+| `PROGRESS.md` | The change log: what each version added, the evidence for it, and the application commit it was synced from — so a reader can tell "the skill is out of date" from "the skill never covered this". |
+
+Use them rather than editing the skill by hand. The prompts enforce the two
+things that matter: a new rule goes in **exactly one** reference file (never in
+`SKILL.md`, which is the map), and it arrives with a check that fails without
+it.
+
 ## Reference files
 
 - `references/design-language.md` — the full visual contract: token set, shell

@@ -67,6 +67,44 @@ implementations.
 | `assets/theme-boot.html` | The pre-paint theme script, so there is never a flash of the wrong theme |
 | `templates/UI_PLAN.md` | The plan document: phases, decision log, progress log, resume prompt |
 | `evals/` | The evaluation set, the "before" fixture app, and the benchmark results |
+| `PROMPTS.md` | Copy-paste prompts for **maintaining this skill** — folding new app structure into it, or adding a theme |
+| `PROGRESS.md` | The change log: what each version added, its evidence, and the app commit it was synced from |
+| `VERSION` | The single source of truth for the skill's version |
+
+## Keeping the skill in sync
+
+This skill was extracted from a real application, and that application keeps
+moving. `PROMPTS.md` is how the skill keeps up — without absorbing the
+application's specifics.
+
+```bash
+git clone https://github.com/Qaphael/workbench-ui.git
+cd workbench-ui
+```
+
+Then hand an agent the **P1** prompt from `PROMPTS.md`. It will:
+
+1. **harvest** every new or changed visual rule from the application, in a
+   consistent shape (Context / Goal / Files / Changes / Do not / Acceptance /
+   Evidence);
+2. **gate** each one behind a promotion test — it must be a *rule* rather than
+   an implementation detail, its "why" must not name the application, and it
+   must have an automatable check. Rules that fail are reported as
+   *considered and rejected*, with the reason;
+3. **place** each promoted rule in exactly one reference file — never in
+   `SKILL.md`, which is the map;
+4. **prove** it with a check that fails without the rule;
+5. **ship** it: bump `VERSION`, add a `PROGRESS.md` row, commit, push, and
+   attach a rebuilt `.skill` to a new release.
+
+Then refresh your installed copy:
+
+```bash
+npx skills update -g
+```
+
+`PROMPTS.md` also has a **P2** prompt for adding a new theme, and documents the
+rule-record shape both prompts use.
 
 ## A quick example
 
