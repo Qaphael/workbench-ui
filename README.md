@@ -54,13 +54,13 @@ implementations.
 | Path | What it is |
 |---|---|
 | `SKILL.md` | The entry point: the five contracts, the phase order, the anti-pattern table |
-| `references/design-language.md` | The full spec — every colour code, the window frame, the shell anatomy, the gutter system, the panel/card geometry, accessibility |
+| `references/design-language.md` | The full spec — every colour code, the window frame, the shell anatomy, the gutter system, the panel/card geometry, the chrome budget, panel disclosure, keyboard ownership, accessibility |
 | `references/migration-playbook.md` | The phases in detail, brownfield vs greenfield, proving neutrality |
-| `references/checklists.md` | Per-phase checklists, the test matrix, the definition of done, the report format |
+| `references/checklists.md` | Per-phase checklists, the test matrix, the promoted-rule checks, the definition of done, the report format |
 | `references/portability.md` | Vue, Svelte, plain HTML, Tailwind, CSS-in-JS, native shells, existing component libraries |
-| `assets/tokens.css` | The copy-paste token layer — palette, roles, geometry, the three-block resolution order |
+| `assets/tokens.css` | The copy-paste token layer — palette, roles (control, danger, scrim), geometry, the three-block resolution order |
 | `assets/lint-colors.mjs` | Fails the build on any hex literal outside the token block |
-| `assets/theme-tokens.test.ts` | Pins the light palette; asserts dark surface ordering and 4.5:1 contrast |
+| `assets/theme-tokens.test.ts` | Pins the light palette; asserts dark surface ordering, role resolution and 4.5:1 contrast |
 | `assets/contrast-check.mjs` | Standalone WCAG checker — no test runner needed |
 | `assets/split.ts` + `split.test.ts` | Pure, DOM-free resize maths for draggable panes, and its tests |
 | `assets/primitives-README.md` | The primitives contract template |

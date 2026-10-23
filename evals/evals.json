@@ -49,6 +49,23 @@
         "The stylesheet src/styles.css is unchanged from the original, OR the outputs/RESULT.md records an explicit, concrete proof-of-neutrality statement (a hash, a byte count, or an equivalent measured claim) rather than merely asserting that nothing changed",
         "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)"
       ]
+    },
+    {
+      "id": 3,
+      "name": "chrome-discipline",
+      "prompt": "Ledgerly's chrome is noisy: the filter row reads as a row of unrelated controls, the side panel explains itself in prose, and 'Mark as paid' sits there disabled until an invoice is selected. The table's headers are not keyboard-sortable, the side panel scrolls as one card, and the dialog has no accessible role. The light palette is the app's identity and must not change. Tidy the chrome without changing the workflow.",
+      "expected_output": "The filter row keeps one baseline, the side panel shows controls rather than instructional prose, 'Mark as paid' is only offered when an invoice is selected, the side panel is a fixed card with a scrolling body, the table headers sort with the keyboard and expose aria-sort, the dialog is a labelled modal, and the light palette is unchanged.",
+      "files": [],
+      "expectations": [
+        "The filter row gives every control the same height and every label the same line box",
+        "The side panel's primary state contains no instructional paragraph; explanations use title attributes or are omitted",
+        "The 'Mark as paid' action is not rendered as a disabled button when no invoice is selected; it appears when one is selected",
+        "The side panel is a fixed card with a scrolling body; the card itself does not scroll",
+        "The table headers are focusable buttons inside `<th>` and the `<th>` carries `aria-sort` when sorted",
+        "The dialog exposes `role=\"dialog\"`, `aria-modal=\"true\"` and an accessible name",
+        "No new runtime dependency was added to package.json (dependencies are still exactly react and react-dom)",
+        "All original user-visible strings are still present in the app source: 'Ledgerly', 'New invoice', 'Internal notes', 'Owner', 'No invoices match your search.', 'Search invoices', 'Mark as paid'"
+      ]
     }
   ]
 }

@@ -68,9 +68,40 @@ function colourTokens(marker: string, closeIndent: string): Record<string, strin
   return tokens;
 }
 
+/** All custom properties (not just `--color-*`) in the block at `marker`. */
+function customTokens(marker: string, closeIndent: string): Record<string, string> {
+  const start = css.indexOf(marker);
+  expect(start, `tokens.css is missing ${marker}`).toBeGreaterThanOrEqual(0);
+  const open = css.indexOf('{', start);
+  const close = css.indexOf(`\n${closeIndent}}`, open);
+  expect(close, `tokens.css has an unterminated ${marker}`).toBeGreaterThan(open);
+
+  const tokens: Record<string, string> = {};
+  for (const match of css.slice(open + 1, close).matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
+    tokens[match[1]] = match[2].trim();
+  }
+  return tokens;
+}
+
 const light = colourTokens(':root {', '');
 const systemDark = colourTokens(':root:not([data-theme="light"]) {', '  ');
 const forcedDark = colourTokens(':root[data-theme="dark"] {', '');
+/** The dark blocks with *every* custom property, including `--scrim`. */
+const systemDarkAll = customTokens(':root:not([data-theme="light"]) {', '  ');
+const forcedDarkAll = customTokens(':root[data-theme="dark"] {', '');
+/** The non-frozen chrome-role block (`CHROME ROLES + CARD GEOMETRY`). */
+const roles = customTokens('CHROME ROLES + CARD GEOMETRY', '');
+
+/** Follow `var(--token)` chains until a literal value is reached. */
+function resolveToken(value: string, tokens: Record<string, string>): string {
+  let resolved = value.trim();
+  for (let i = 0; i < 5; i += 1) {
+    const reference = /^var\((--[\w-]+)\)$/.exec(resolved);
+    if (!reference) break;
+    resolved = (tokens[reference[1]] ?? light[reference[1]] ?? resolved).trim();
+  }
+  return resolved;
+}
 
 /** Relative luminance per WCAG 2.1. */
 function luminance(hex: string): number {
@@ -149,5 +180,50 @@ describe('dark palette', () => {
     expect(contrast(forcedDark['--color-on-primary'], forcedDark['--color-primary'])).toBeGreaterThanOrEqual(
       4.5,
     );
+  });
+});
+
+describe('chrome roles', () => {
+  it('declares the control, danger, scrollbar and scrim roles', () => {
+    for (const token of [
+      '--color-control',
+      '--color-control-hover',
+      '--color-button-danger',
+      '--color-button-danger-text',
+      '--color-scrollbar-thumb',
+      '--scrim',
+    ]) {
+      expect(roles[token], `tokens.css is missing ${token}`).toBeDefined();
+    }
+  });
+
+  it('keeps a destructive action out of the primary action’s way in dark', () => {
+    expect(resolveToken(forcedDark['--color-button-danger'], forcedDark)).toBe(
+      resolveToken(forcedDark['--color-button-2'], forcedDark),
+    );
+    expect(resolveToken(forcedDark['--color-button-danger-text'], forcedDark)).toBe(
+      forcedDark['--color-danger'],
+    );
+  });
+
+  it('makes the dialog scrim heavier in dark', () => {
+    expect(roles['--scrim']).toContain('40%');
+    expect(systemDarkAll['--scrim']).toContain('65%');
+    expect(forcedDarkAll['--scrim']).toContain('65%');
+  });
+
+  it('puts the filled control one step above panel-2 in dark', () => {
+    expect(luminance(forcedDark['--color-control'])).toBeGreaterThan(
+      luminance(forcedDark['--color-panel-2']),
+    );
+  });
+
+  it('keeps danger button text readable in both themes', () => {
+    const lightFill = resolveToken(roles['--color-button-danger'], roles);
+    const lightText = resolveToken(roles['--color-button-danger-text'], roles);
+    const darkFill = resolveToken(forcedDark['--color-button-danger'], forcedDark);
+    const darkText = resolveToken(forcedDark['--color-button-danger-text'], forcedDark);
+    expect(contrast(lightText, lightFill)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(darkText, darkFill)).toBeGreaterThanOrEqual(4.5);
   });
 });

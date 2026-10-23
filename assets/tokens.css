@@ -37,12 +37,15 @@
 
    ── CHROME ROLES ──────────────────────────────────────────────────────────
 
-   The `--color-shell`, `--color-field`, `--color-button-2` and `--color-seg*`
-   tokens are indirections. Light resolves them to bordered, flat surfaces;
-   dark resolves them to filled, borderless controls. That is what lets an
-   entire class of controls change character in one theme by editing one block,
-   with no component touched. They are applied in only a handful of places —
-   that is the point.
+   The `--color-shell`, `--color-control`, `--color-field`, `--color-button-2`,
+   `--color-button-danger` and `--color-seg*` tokens are indirections. Light
+   resolves them to bordered, flat surfaces; dark resolves them to filled,
+   borderless controls. That is what lets an entire class of controls change
+   character in one theme by editing one block, with no component touched. They
+   are applied in only a handful of places — that is the point.
+
+   `--scrim` is a role too: a dialog veil is not a fixed opacity, because 35%
+   reads in light and vanishes on a near-black UI.
    ========================================================================== */
 
 /* ── Light theme (default). Frozen — see rule 1. ─────────────────────────── */
@@ -153,6 +156,11 @@
   --color-field-border: var(--color-border);
   --color-field-border-hover: var(--color-border);
 
+  /* Filled controls share one fill role. Light resolves it to panel-2, which is
+     the existing look; dark resolves it to one step above panel-2. */
+  --color-control: var(--color-panel-2);
+  --color-control-hover: var(--color-bg-hover);
+
   /* Secondary buttons. */
   --color-button-2: var(--color-panel-2);
   --color-button-2-border: var(--color-border);
@@ -163,6 +171,19 @@
   --color-seg: var(--color-panel-2);
   --color-seg-border: var(--color-border);
   --color-seg-active: var(--color-panel);
+
+  /* A destructive action inside a working panel must not compete with the
+     view's one primary action. Light keeps the filled red; dark resolves to a
+     neutral fill with semantic text (see the dark blocks). */
+  --color-button-danger: var(--color-danger);
+  --color-button-danger-text: var(--color-on-primary);
+
+  /* The dialog scrim: 40% black in light, 65% in dark. A fixed 35% veil is
+     invisible on a near-black UI. */
+  --scrim: color-mix(in srgb, var(--color-overlay) 40%, transparent);
+
+  /* Scrollbar thumb: muted in light, the control fill in dark. */
+  --color-scrollbar-thumb: var(--color-muted);
 }
 
 /* ============================================================================
@@ -203,17 +224,23 @@
     /* Chrome roles: the shell recedes to the app background so the cards are
        the only raised surfaces, and the controls become filled and borderless
        with their border returning on hover/focus. */
+    --color-control: #262626;
+    --color-control-hover: #303030;
     --color-shell: var(--color-bg);
-    --color-field: #262626;
+    --color-field: var(--color-control);
     --color-field-border: transparent;
     --color-field-border-hover: var(--color-border-strong);
-    --color-button-2: #262626;
+    --color-button-2: var(--color-control);
     --color-button-2-border: transparent;
-    --color-button-2-hover: #303030;
+    --color-button-2-hover: var(--color-control-hover);
     --color-button-2-hover-border: transparent;
     --color-seg: var(--color-bg);
     --color-seg-border: transparent;
-    --color-seg-active: #262626;
+    --color-seg-active: var(--color-control);
+    --color-button-danger: var(--color-button-2);
+    --color-button-danger-text: var(--color-danger);
+    --scrim: color-mix(in srgb, var(--color-overlay) 65%, transparent);
+    --color-scrollbar-thumb: var(--color-control);
 
     /* Dark cards are told apart by surface, not elevation. */
     --shadow-card: none;
@@ -252,17 +279,23 @@
   --color-overlay: #000000;
   --color-on-overlay: #ffffff;
 
+  --color-control: #262626;
+  --color-control-hover: #303030;
   --color-shell: var(--color-bg);
-  --color-field: #262626;
+  --color-field: var(--color-control);
   --color-field-border: transparent;
   --color-field-border-hover: var(--color-border-strong);
-  --color-button-2: #262626;
+  --color-button-2: var(--color-control);
   --color-button-2-border: transparent;
-  --color-button-2-hover: #303030;
+  --color-button-2-hover: var(--color-control-hover);
   --color-button-2-hover-border: transparent;
   --color-seg: var(--color-bg);
   --color-seg-border: transparent;
-  --color-seg-active: #262626;
+  --color-seg-active: var(--color-control);
+  --color-button-danger: var(--color-button-2);
+  --color-button-danger-text: var(--color-danger);
+  --scrim: color-mix(in srgb, var(--color-overlay) 65%, transparent);
+  --color-scrollbar-thumb: var(--color-control);
 
   --shadow-card: none;
 

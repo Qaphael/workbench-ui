@@ -255,7 +255,8 @@ and verifies its own output.
 ## Reference files
 
 - `references/design-language.md` — the full visual contract: token set, shell
-  and card CSS, chrome roles, primitives, accessibility rules, dark theme.
+  and card CSS, chrome roles, the chrome budget, panel disclosure, primitives,
+  accessibility rules, keyboard ownership, dark theme.
 - `references/migration-playbook.md` — the phases in detail, with per-phase
   checklists, the brownfield and greenfield variants, and how to run the method
   across sessions and machines.

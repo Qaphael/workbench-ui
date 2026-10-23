@@ -17,6 +17,7 @@ behind those values and the CSS that applies them.
 9. [Type, spacing, radii](#9-type-spacing-radii)
 10. [Accessibility rules](#10-accessibility-rules)
 11. [The primitives contract](#11-the-primitives-contract)
+12. [Direct-manipulation surfaces](#12-direct-manipulation-surfaces)
 
 ---
 
@@ -145,6 +146,20 @@ Note the two things that are easy to get wrong:
   One radius for the frame and the cards is what makes the app look designed
   rather than assembled.
 
+### A view replaces; a dialog covers
+
+A workflow view is a full workspace, not a layer. Switching steps swaps the view
+in place; it must not leave the previous view mounted underneath, because that
+view's keyboard handlers are still aimed at something the user cannot see. Only
+dialogs are modals, and a dialog is the one thing allowed to cover a view.
+
+Two consequences follow:
+
+- **The router is part of the shell contract.** A deep link to a view with
+  nothing loaded falls back to the start view, never to a blank workspace.
+- **Shortcuts belong to the active view, not the window.** If the editor is not
+  on screen, its Delete/arrow/tool keys must not fire (see §10).
+
 ---
 
 ## 3. The gutter system
@@ -186,6 +201,22 @@ component you already needed.
   /* Match the card's vertical inset so the divider sits in the gap, not
      alongside the shell edges. */
   margin: var(--gutter) 0;
+}
+```
+
+**A divider is invisible until it is interactive.** The gutter already separates
+the cards; a permanent rule adds noise and makes the workspace look boxed in.
+Draw the splitter as a transparent hairline that appears on hover, focus and
+drag:
+
+```css
+.split-handle::before {
+  background: transparent;
+}
+.split-handle:hover::before,
+.split-handle:focus-visible::before,
+.split-handle[data-dragging="true"]::before {
+  background: var(--color-border-strong);
 }
 ```
 
@@ -294,6 +325,52 @@ the shell surface and **no top rule**:
 }
 ```
 
+### Scrolling belongs to the body, not the card
+
+A panel is a fixed card with a scrolling body. The card never scrolls and the
+footer never scrolls; the body does. If the whole card scrolls, its rounded
+corners and its footer drift while the content moves, and focusing a control can
+scroll the card out from under its own heading.
+
+```css
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.panel-body {
+  flex: 1 1 auto;
+  min-height: 0;    /* without this, flex children refuse to shrink */
+  overflow: auto;
+}
+.panel-footer {
+  flex: 0 0 auto;   /* the footer can never be squeezed by the scrolling body */
+}
+```
+
+### One baseline per control row
+
+Native controls have different intrinsic heights — a date input, a select and a
+text input are rarely equal, and their labels inherit three different line
+boxes. A row of filters must give every control the same height and every label
+the same line box; otherwise the row reads as a jagged accident even when the
+gaps are perfect.
+
+```css
+.filter-row > .input,
+.filter-row > .select,
+.filter-row > .date-control {
+  height: 32px;
+}
+.filter-row > label {
+  line-height: 16px;
+}
+```
+
+Keep this a row-level rule, not a global input height: a search field in a
+toolbar and a textarea in a form have different jobs.
+
 ---
 
 ## 5. Chrome roles
@@ -303,13 +380,19 @@ The indirections that make theming cheap.
 | Role token | Light | Dark | Applied to |
 |---|---|---|---|
 | `--color-shell` | `panel` | `bg` | header, tool rail, status bar |
-| `--color-field` | `panel` | `panel-2` (`#262626`) | inputs, selects |
+| `--color-control` | `panel-2` | `#262626` | the one fill shared by fields, secondary buttons and the active segment |
+| `--color-control-hover` | `bg-hover` | `#303030` | hover for every filled control |
+| `--color-field` | `panel` | `control` | inputs, selects |
 | `--color-field-border` | `border` | `transparent` | …the border that comes back on hover |
-| `--color-button-2` | `panel-2` | `panel-2` (`#262626`) | secondary buttons |
+| `--color-button-2` | `panel-2` | `control` | secondary buttons |
 | `--color-button-2-border` | `border` | `transparent` | |
 | `--color-seg` | `panel-2` | `bg` | segmented control track |
 | `--color-seg-border` | `border` | `transparent` | |
-| `--color-seg-active` | `panel` | `panel-2` (`#262626`) | the active segment |
+| `--color-seg-active` | `panel` | `control` | the active segment |
+| `--color-button-danger` | `danger` | `button-2` | a destructive action inside a working panel |
+| `--color-button-danger-text` | `on-primary` | `danger` | its text and icon |
+| `--color-scrollbar-thumb` | `muted` | `control` | the scrollbar thumb |
+| `--scrim` | `40% overlay` | `65% overlay` | the dialog veil |
 | `--shadow-card` | `--shadow-md` | `none` | every card |
 
 The payoff is measurable: **these roles are referenced in five places.** In
@@ -341,6 +424,25 @@ wrong.** The filled primary *button* is the view's one primary action.
 }
 .tool-rail-button.on:hover { background: var(--color-primary); color: var(--color-on-primary); filter: brightness(1.08); }
 ```
+
+### A dangerous action is not a second primary
+
+A Delete inside a working panel must not compete with the view's one primary
+action. In light the app's existing language can keep the filled red. In dark a
+filled red button becomes the brightest thing on a near-black panel and reads as
+the thing to press, so the danger roles resolve to a neutral `button-2` fill with
+semantic `danger` text and icon.
+
+```css
+/* the only place the danger roles are used */
+.panel .btn-danger {
+  background: var(--color-button-danger);
+  color: var(--color-button-danger-text);
+}
+```
+
+Dialogs keep the global filled `.btn-danger`: there, a destructive confirmation
+*is* the point, and it is the only primary action in the dialog.
 
 ---
 
@@ -389,6 +491,28 @@ what is on screen.
   .tool-rail { gap: var(--space-1); }
 }
 ```
+
+### The chrome budget
+
+The header is the densest chrome in the app and the first thing that breaks at
+the smallest supported width. Budget it: at **1024 px** the header carries at
+most **eight visible interactive controls**. The brand is a non-interactive
+`<span>`, not a button; a logo that looks clickable spends a slot for nothing.
+
+When the budget is exceeded, collapse by priority — never by wrapping:
+
+1. **Labels before controls.** The primary action's label and the current
+   document name drop; the icon, the value and the tooltip stay.
+2. **Secondary controls into overflow.** Theme, settings and About move into one
+   "…" menu. The theme switch can stay in the header above 1200 px and move into
+   that menu below it; it is always reachable either way.
+3. **Never add a second row.** A second header row is a layout change, not a
+   responsive state, and it steals height from the work surface at exactly the
+   width where space is tightest.
+
+The same rule applies to any toolbar: a control that needs a second row at the
+minimum width belongs in a menu. This is checkable — count the interactive
+controls in the header at 1024 px and assert there is no horizontal page scroll.
 
 ---
 
@@ -504,6 +628,27 @@ thing on screen — that is the whole point of the hierarchy.
 In light, cards are separated by a soft shadow. In dark they are separated by
 surface alone. A shadow on a near-black card is invisible noise.
 
+### The scrim is a theme token
+
+A fixed scrim opacity that reads in light disappears on a near-black UI. At 35 %
+over a white page the veil still reads; over a `#111` app the paper behind it is
+barely dimmed, so the dialog stops feeling modal. Make the scrim a role and make
+dark heavier:
+
+```css
+:root {
+  --scrim: color-mix(in srgb, var(--color-overlay) 40%, transparent);
+}
+:root[data-theme="dark"] {
+  --scrim: color-mix(in srgb, var(--color-overlay) 65%, transparent);
+}
+```
+
+Test the **rendered pixel** behind the scrim, not the opacity value: sample the
+paper through the veil and assert it drops from 255 to about 153 in light and to
+about 89 in dark. A token that looks right in the stylesheet can still be wrong
+on screen.
+
 ### The system-dark and forced-dark blocks are duplicated on purpose
 
 You cannot `@import` one into the other without a build step, and you cannot
@@ -555,6 +700,18 @@ marketing page. Larger sizes are for empty states, not for field labels.
 
 Use `field-sizing: content` on a numeric field whose width should hug its
 digits, so `79` does not float in a wide box.
+
+### A heading is sentence case; caps is a field label
+
+An 11 px uppercase caps label is a *field* label, never a heading. Headings —
+card titles, inspector section titles, settings section titles — are sentence
+case at 13 px / 600 in `--color-text`, with `text-transform: none` and
+`letter-spacing: 0`. The distinction is what stops a settings dialog from
+reading as a form legend repeated three times.
+
+When a heading shares a row with a control, it keeps `margin-bottom: 0`. When it
+stands alone, the space below it is a real block margin, not a margin on an
+inline `<span>` (which does nothing).
 
 ---
 
@@ -609,6 +766,32 @@ These are acceptance criteria, not a phase at the end.
 - **`prefers-contrast: more`**: strengthen borders, muted text and the focus
   ring.
 
+- **Status is words plus a tint, never colour alone.** A badge says
+  "Confirmed", "Void" or "Needs review" and *also* carries a tint derived from
+  its own semantic colour (`color-mix(in srgb, currentColor 8%, transparent)`).
+  Colour-only status fails for colour-blind users and in a monochrome
+  screenshot.
+
+- **Sortable table headers are keyboard-operable and expose `aria-sort`.**
+  Enter or Space toggles the sort; the header is a real button inside the
+  `<th>`; the current direction is on the `<th>` as `aria-sort="ascending"` /
+  `"descending"`. A table that only sorts on click is a mouse-only feature.
+
+- **Long cell content wraps, it does not ellipsize.** A number range or a
+  template name that ends in "…" hides the part the user came to read. Let the
+  cell wrap and keep the table from forcing page-level horizontal scroll at the
+  smallest supported width.
+
+- **One modal stack owns Escape.** Every dialog registers in the same stack;
+  Escape closes only the top-most, never every open dialog at once. Global
+  shortcuts (undo, save, delete) are inert while any modal is open — a shortcut
+  that reaches the editor behind a dialog edits something the user cannot see.
+
+- **Shortcuts are scoped by target, not by key.** A text field owns all keys
+  (the browser's own text undo included); a dialog or menu owns all keys while
+  it is open; a `<select>` owns the arrow keys and type-ahead but not the
+  modifier shortcuts; anywhere else the app may run its shortcuts.
+
 - **Run axe in both themes.** A theme that only passes in light is not
   accessible.
 
@@ -616,7 +799,8 @@ These are acceptance criteria, not a phase at the end.
 
 ## 11. The primitives contract
 
-The full text is in `assets/primitives-README.md`. The four rules that matter:
+The full primitive contract is in `assets/primitives-README.md`. The four rules
+for the primitives themselves:
 
 1. **Adopt, don't re-style.** Never pass `className` to change a primitive's
    appearance. If a screen needs a different look, change the class in the
@@ -627,6 +811,55 @@ The full text is in `assets/primitives-README.md`. The four rules that matter:
 4. **Every button is explicit about `type`.** Default `type="button"`;
    `type="submit"` only inside a real form.
 
+Two rules for the panel that composes them:
+
+5. **Offer an action only when it can run.** An align action appears at two
+   selected items; distribute at three. If the blocker is the current selection,
+   hide the action instead of rendering a disabled button that can never be
+   enabled in that state. A dead control is not an affordance.
+6. **A panel shows controls, not prose.** Labels, values and controls only;
+   explanations belong on the control's `title`/tooltip. A primary state with
+   zero instructional paragraphs is the target — the user reads the control,
+   not a manual beside it.
+
 Plus: every control keeps a `data-testid` where a spec already selects it, and
 a `Field` clones its child and injects `id` / `aria-describedby` /
 `aria-invalid` so the association cannot be forgotten.
+
+---
+
+## 12. Direct-manipulation surfaces
+
+A canvas, grid or timeline that the user clicks and drags must own the keyboard
+while it is the active surface. Otherwise a shortcut lands on the last-clicked
+button and the work surface feels broken even though every handler is correct.
+The editor is the obvious case, but the same contract applies to any surface
+with a pointer gesture.
+
+- **Take focus on pointerdown.** Call `wrapper.focus({ preventScroll: true })`
+  in the gesture's `pointerdown`, because the gesture prevents the default focus
+  change. Without it the focus stays on the last-clicked toolbar button and
+  Space, arrows and undo are all aimed at the wrong place.
+
+- **Space is a held modifier, not a shortcut.** The surface listens for
+  `keydown`/`keyup` and only gives up for a text field, an open modal, or a
+  control the user reached with the **keyboard** (Tab). A control the user
+  clicked with the mouse does not keep Space: a stray Space must never
+  re-activate the panel's Delete button.
+
+- **Sample `:focus-visible` at focus time, not inside keydown.** Browsers
+  recompute the flag on every key event, so a `keydown` handler always reads the
+  wrong value. Listen on `focusin` and remember whether the focus came from the
+  keyboard.
+
+- **Release the modifier on `blur` / `visibilitychange`.** The keyup is lost
+  when the user alt-tabs while holding Space; without this the surface stays
+  stuck in pan mode when they come back.
+
+- **A drag is one undo step.** Keep the preview in local state and commit once on
+  `pointerup`; a gesture that writes on every move fills the undo stack with
+  noise and makes undo unusable.
+
+Check: focus a toolbar button, then Space-drag the surface — it pans. Click the
+Delete button, press Space — it does not delete. Alt-tab away while holding
+Space, come back, release — the surface is not stuck panning.
