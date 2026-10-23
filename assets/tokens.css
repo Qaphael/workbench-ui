@@ -71,7 +71,7 @@
   --color-warning-tint: #f7ecd6;
 
   /* More surfaces */
-  --color-canvas: #d9dcd4;        /* the well the work sits in */
+  --color-canvas: #d9dcd4;        /* the well the work sits in — holds no text */
   --color-border-strong: #b4baac; /* hairline on hover */
   --color-bg-hover: #e3e6de;      /* hover fill on rows and buttons */
 

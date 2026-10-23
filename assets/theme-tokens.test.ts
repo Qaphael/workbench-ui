@@ -92,6 +92,18 @@ const forcedDarkAll = customTokens(':root[data-theme="dark"] {', '');
 /** The non-frozen chrome-role block (`CHROME ROLES + CARD GEOMETRY`). */
 const roles = customTokens('CHROME ROLES + CARD GEOMETRY', '');
 
+/**
+ * Surfaces that text is actually drawn on.
+ *
+ * `--color-canvas` is deliberately absent: it is the well/mat the work sits
+ * in, not a text background, so it is asserted structurally (it must stay
+ * recessed) rather than for text contrast. See `assets/contrast-check.mjs`,
+ * which reports the well's ratios for interest without failing on them.
+ */
+const TEXT_SURFACES = ['--color-bg', '--color-panel', '--color-panel-2', '--color-bg-hover'];
+/** Semantic colours that must stay readable wherever text is drawn. */
+const SEMANTIC_COLOURS = ['--color-danger', '--color-success', '--color-warning'];
+
 /** Follow `var(--token)` chains until a literal value is reached. */
 function resolveToken(value: string, tokens: Record<string, string>): string {
   let resolved = value.trim();
@@ -159,8 +171,29 @@ describe('dark palette', () => {
     }
   });
 
-  it.each(['--color-bg', '--color-panel', '--color-panel-2', '--color-bg-hover', '--color-canvas'])(
-    'keeps body text and muted text at 4.5:1 or better on %s',
+  it('keeps the well recessed: the canvas is the darkest surface', () => {
+    expect(luminance(forcedDark['--color-canvas'])).toBeLessThan(luminance(forcedDark['--color-bg']));
+  });
+
+  it('keeps primary button text readable', () => {
+    expect(contrast(forcedDark['--color-on-primary'], forcedDark['--color-primary'])).toBeGreaterThanOrEqual(
+      4.5,
+    );
+  });
+});
+
+describe('contrast', () => {
+  it.each(TEXT_SURFACES)(
+    'keeps body text and muted text at 4.5:1 or better on light %s',
+    (surface) => {
+      const background = light[surface];
+      expect(contrast(light['--color-text'], background)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(light['--color-muted'], background)).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
+  it.each(TEXT_SURFACES)(
+    'keeps body text and muted text at 4.5:1 or better on dark %s',
     (surface) => {
       const background = forcedDark[surface];
       expect(contrast(forcedDark['--color-text'], background)).toBeGreaterThanOrEqual(4.5);
@@ -168,18 +201,28 @@ describe('dark palette', () => {
     },
   );
 
-  it.each(['--color-danger', '--color-success', '--color-warning'])(
-    'keeps the semantic colour %s readable on panel and canvas',
+  it.each(SEMANTIC_COLOURS)(
+    'keeps the semantic colour %s readable on light panel and bg',
     (token) => {
-      expect(contrast(forcedDark[token], forcedDark['--color-panel'])).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(forcedDark[token], forcedDark['--color-canvas'])).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(light[token], light['--color-panel'])).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(light[token], light['--color-bg'])).toBeGreaterThanOrEqual(4.5);
     },
   );
 
-  it('keeps primary button text readable', () => {
-    expect(contrast(forcedDark['--color-on-primary'], forcedDark['--color-primary'])).toBeGreaterThanOrEqual(
-      4.5,
-    );
+  it.each(SEMANTIC_COLOURS)(
+    'keeps the semantic colour %s readable on dark panel and bg',
+    (token) => {
+      expect(contrast(forcedDark[token], forcedDark['--color-panel'])).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(forcedDark[token], forcedDark['--color-bg'])).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
+  it('keeps the light well recessed: the canvas is darker than the background', () => {
+    expect(luminance(light['--color-canvas'])).toBeLessThan(luminance(light['--color-bg']));
+  });
+
+  it('keeps primary button text readable in light', () => {
+    expect(contrast(light['--color-on-primary'], light['--color-primary'])).toBeGreaterThanOrEqual(4.5);
   });
 });
 

@@ -175,8 +175,11 @@ made it survivable:
   dependencies are fine.
 - **Do not change semantics.** Numbering, printing, data locations and API
   contracts are not a design project.
-- **Contrast ≥ 4.5:1 for body text in both themes**, and disabled states stay
-  *readable* — a flat fill with muted text, not a faded opacity.
+- **Contrast ≥ 4.5:1 for body text on every *text* surface, in both themes** —
+  and disabled states stay *readable*: a flat fill with muted text, not a faded
+  opacity. `--color-canvas` is the well the work sits in, not a text
+  background, so it is asserted structurally (it must stay recessed) rather
+  than for text contrast.
 - **Keyboard and pointer are equals.** Every drag has a keyboard equivalent;
   every tab list has arrow-key navigation.
 - **Never add a second styling system.** Tailwind, CSS modules, CSS-in-JS and

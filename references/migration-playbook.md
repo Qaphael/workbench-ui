@@ -94,7 +94,7 @@ surfaces instead of outlining them.
   - [ ] the light fingerprint is byte-identical to the Phase 0 record;
   - [ ] the two dark blocks are identical to each other;
   - [ ] dark surface luminance increases monotonically canvas → bg-hover;
-  - [ ] contrast ≥ 4.5:1 for text and muted on every surface, in both themes;
+  - [ ] contrast ≥ 4.5:1 for text and muted on every text surface, in both themes;
   - [ ] the colour lint passes.
 
 At the end of Phase 1 the app should look **exactly the same** in light mode.

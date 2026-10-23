@@ -219,8 +219,11 @@ against the target app, not against this skill.
 - [ ] One focus treatment everywhere: `outline: 2px solid var(--color-selection)`
       with a matching offset.
 - [ ] The focus ring is on the control, not on an inner element.
-- [ ] Body and muted text ≥ 4.5:1 on every surface, **both** themes.
-- [ ] Semantic colours (danger/success/warning) ≥ 4.5:1 on panel and canvas.
+- [ ] Body and muted text ≥ 4.5:1 on every **text** surface (bg, panel,
+      panel-2, bg-hover), **both** themes. `--color-canvas` is the well the
+      work sits in and holds no text — assert it stays recessed instead.
+- [ ] Semantic colours (danger/success/warning) ≥ 4.5:1 on panel and bg in
+      both themes.
 - [ ] Disabled controls are **readable** — flat fill + muted text, not a faded
       opacity.
 - [ ] Every drag has a keyboard equivalent.

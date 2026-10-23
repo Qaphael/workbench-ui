@@ -35,7 +35,7 @@ behind those values and the CSS that applies them.
 | `--color-border` | `#d5d8d0` | hairline |
 | `--color-border-strong` | `#b4baac` | hairline on hover |
 | `--color-text` | `#1f2430` | body text |
-| `--color-muted` | `#5c6472` | secondary text (≥ 4.5:1 on every surface) |
+| `--color-muted` | `#5c6472` | secondary text (≥ 4.5:1 on every text surface) |
 | `--color-primary` | `#26324d` | brand navy; the one filled accent |
 | `--color-on-primary` | `#ffffff` | text/icon on the primary fill |
 | `--color-selection` | `#2f5bd6` | focus ring + selection ring |
@@ -743,8 +743,11 @@ These are acceptance criteria, not a phase at the end.
   `opacity: 0.4` on a button drops it below 4.5:1 against the panel. This is a
   real bug that most designs ship.
 
-- **Contrast ≥ 4.5:1** for body and muted text on every surface in **both**
-  themes. Assert it in a test, not by eye — `assets/theme-tokens.test.ts` does.
+- **Contrast ≥ 4.5:1** for body and muted text on every **text** surface —
+  `--color-bg`, `--color-panel`, `--color-panel-2` and `--color-bg-hover` — in
+  **both** themes. `--color-canvas` is the well the work sits in, so it holds
+  no text; assert it stays recessed instead. Assert it in a test, not by eye —
+  `assets/theme-tokens.test.ts` does.
 
 - **Keyboard = pointer.** Every drag has a keyboard equivalent (arrow keys,
   Shift for a larger step), every tab list has arrow-key navigation with a

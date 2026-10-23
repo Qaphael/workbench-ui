@@ -8,12 +8,20 @@
  * Usage:
  *   node scripts/contrast-check.mjs "#f2f2f2" "#181818"
  *   node scripts/contrast-check.mjs --tokens src/styles/tokens.css
+ *   node scripts/contrast-check.mjs --tokens src/styles/tokens.css --theme light
  *
- * With --tokens, it reads the token stylesheet and checks every foreground /
- * surface pair it can infer from the token names, then reports anything below
- * the threshold.
+ * With --tokens it reads the token stylesheet, resolves BOTH themes (light
+ * from the `:root` blocks, dark from the `[data-theme="dark"]` and
+ * `:not([data-theme="light"])` blocks), and checks every text pair in each.
  *
- * Exit code 1 if any pair fails.
+ * --theme light|dark|both   which theme(s) to check. Default: both.
+ *
+ * Text is checked on the surfaces text is actually drawn on (--color-bg,
+ * --color-panel, --color-panel-2, --color-bg-hover). --color-canvas is the
+ * well the work sits in, not a text surface, so it is reported for interest
+ * and never fails the run.
+ *
+ * Exit code 1 if any text pair fails, 2 on a usage error.
  */
 
 import { readFileSync } from 'node:fs';
@@ -46,13 +54,125 @@ function contrast(fg, bg) {
   return (a + 0.05) / (b + 0.05);
 }
 
-/* ── modes ───────────────────────────────────────────────────────────────── */
+/* ── stylesheet parsing ──────────────────────────────────────────────────── */
+
+/**
+ * Remove `/* ... *\/` comments before parsing.
+ *
+ * Token stylesheets routinely carry CSS examples inside their header comments
+ * (`@media (...) { :root:not(...) }`), and a stray brace in a comment would
+ * desynchronise a brace-matching parser.
+ */
+function stripComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, '');
+}
+
+/** Body of the block whose `{` is at `open`, matched to its closing `}`. */
+function blockBody(css, open) {
+  let depth = 1;
+  let i = open;
+  while (i < css.length && depth > 0) {
+    if (css[i] === '{') depth += 1;
+    else if (css[i] === '}') depth -= 1;
+    i += 1;
+  }
+  return css.slice(open, i - 1);
+}
+
+/** Selector text of a `selector {` match, with any trailing comment removed. */
+function selectorOf(raw) {
+  return raw.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+}
+
+/** Remove the whole block whose selector contains `needle`. */
+function stripBlock(css, needle) {
+  const re = /([^{}]+)\{/g;
+  let m;
+  while ((m = re.exec(css))) {
+    if (selectorOf(m[1]).includes(needle)) {
+      const open = m.index + m[0].length;
+      const body = blockBody(css, open);
+      return css.slice(0, m.index) + css.slice(open + body.length + 1);
+    }
+  }
+  return css;
+}
+
+/** Bodies of every block whose selector is exactly `selector`. */
+function blocksFor(css, selector) {
+  const out = [];
+  const re = /([^{}]+)\{/g;
+  let m;
+  while ((m = re.exec(css))) {
+    if (selectorOf(m[1]) === selector) out.push(blockBody(css, m.index + m[0].length));
+  }
+  return out;
+}
+
+/** Every `--color-x: #hex` across the bodies, last value wins. */
+function collect(bodies) {
+  const tokens = {};
+  for (const body of bodies) {
+    for (const m of body.matchAll(/(--color-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g)) {
+      tokens[m[1]] = m[2].toLowerCase();
+    }
+  }
+  return tokens;
+}
+
+/**
+ * Resolve both themes from a token stylesheet.
+ * Dark falls back to light for tokens it does not override, exactly as CSS does.
+ */
+function themesFrom(rawCss) {
+  const css = stripComments(rawCss);
+
+  // Light: every `:root` block that is not the dark media query.
+  const withoutDarkQuery = stripBlock(css, '@media (prefers-color-scheme: dark)');
+  const light = collect(blocksFor(withoutDarkQuery, ':root'));
+
+  const darkOverrides = collect([
+    ...blocksFor(css, ':root[data-theme="dark"]'),
+    ...blocksFor(css, ':root:not([data-theme="light"])'),
+  ]);
+  const dark = { ...light, ...darkOverrides };
+
+  return { light, dark };
+}
+
+/* ── what is checked ─────────────────────────────────────────────────────── */
 
 const THRESHOLD = 4.5; // WCAG AA for normal text
 
+/** Surfaces that text is actually drawn on. */
+const TEXT_SURFACES = ['--color-bg', '--color-panel', '--color-panel-2', '--color-bg-hover'];
+/** The well/mat the work sits in. Reported, never failed. */
+const NON_TEXT_SURFACES = ['--color-canvas'];
+/** Foregrounds that must be readable. */
+const FOREGROUNDS = ['--color-text', '--color-muted'];
+
+/* ── CLI ─────────────────────────────────────────────────────────────────── */
+
 const argv = process.argv.slice(2);
+
+function usage(problem) {
+  if (problem) console.error(`error: ${problem}\n`);
+  console.error(
+    'usage:\n' +
+      '  node scripts/contrast-check.mjs "#f2f2f2" "#181818"\n' +
+      '  node scripts/contrast-check.mjs --tokens src/styles/tokens.css [--theme light|dark|both]',
+  );
+  process.exit(2);
+}
+
+// Two-colour mode.
 if (argv.length >= 2 && !argv[0].startsWith('--')) {
-  const ratio = contrast(argv[0], argv[1]);
+  let ratio;
+  try {
+    ratio = contrast(argv[0], argv[1]);
+  } catch (error) {
+    usage(error.message);
+  }
   const verdict = ratio >= THRESHOLD ? 'PASS' : 'FAIL';
   console.log(
     `${verdict}  ${argv[0]} on ${argv[1]} = ${ratio.toFixed(2)}:1 ` +
@@ -61,53 +181,78 @@ if (argv.length >= 2 && !argv[0].startsWith('--')) {
   process.exit(ratio >= THRESHOLD ? 0 : 1);
 }
 
-const tokensIndex = argv.indexOf('--tokens');
-if (tokensIndex >= 0) {
-  const path = resolve(argv[tokensIndex + 1]);
-  const css = readFileSync(path, 'utf8');
+let tokensPath = null;
+let theme = 'both';
+const THEMES = ['light', 'dark', 'both'];
 
-  /** Every `--color-x: #hex` in the file, last value wins. */
-  const tokens = {};
-  for (const m of css.matchAll(/(--color-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g)) {
-    tokens[m[1]] = m[2].toLowerCase();
+for (let i = 0; i < argv.length; i += 1) {
+  const arg = argv[i];
+  if (arg === '--tokens') {
+    tokensPath = argv[i + 1];
+    if (!tokensPath || tokensPath.startsWith('--')) usage('--tokens needs a path');
+    i += 1;
+  } else if (arg === '--theme') {
+    theme = argv[i + 1];
+    if (!THEMES.includes(theme)) usage(`--theme must be one of ${THEMES.join(', ')} (got ${argv[i + 1] ?? '<nothing>'})`);
+    i += 1;
+  } else if (arg.startsWith('--')) {
+    usage(`unknown flag: ${arg}`);
+  } else {
+    usage(`unexpected argument: ${arg}`);
+  }
+}
+
+if (!tokensPath) usage('--tokens is required in stylesheet mode');
+
+let css;
+try {
+  css = readFileSync(resolve(tokensPath), 'utf8');
+} catch (error) {
+  usage(`cannot read ${tokensPath}: ${error.message}`);
+}
+
+const themes = themesFrom(css);
+const wanted = theme === 'both' ? ['light', 'dark'] : [theme];
+
+let failures = 0;
+let checked = 0;
+
+for (const name of wanted) {
+  const tokens = themes[name];
+  const missingSurface = [...TEXT_SURFACES, ...NON_TEXT_SURFACES].find((s) => !tokens[s]);
+  const missingFg = FOREGROUNDS.find((f) => !tokens[f]);
+  if (missingSurface || missingFg) {
+    console.error(`error: the ${name} theme is missing ${missingSurface ?? missingFg}`);
+    process.exit(2);
   }
 
-  /** Surfaces that text is drawn on. */
-  const surfaces = [
-    '--color-bg',
-    '--color-panel',
-    '--color-panel-2',
-    '--color-bg-hover',
-    '--color-canvas',
-  ];
-  /** Foregrounds that must be readable. */
-  const foregrounds = ['--color-text', '--color-muted'];
-
-  let failures = 0;
-  let checked = 0;
-  for (const surface of surfaces) {
-    for (const foreground of foregrounds) {
-      const bg = tokens[surface];
-      const fg = tokens[foreground];
-      if (!bg || !fg) continue;
-      const ratio = contrast(fg, bg);
-      checked += 1;
+  console.log(`\n${name} theme`);
+  for (const surface of TEXT_SURFACES) {
+    for (const foreground of FOREGROUNDS) {
+      const ratio = contrast(tokens[foreground], tokens[surface]);
       const ok = ratio >= THRESHOLD;
+      checked += 1;
       if (!ok) failures += 1;
       console.log(
-        `${ok ? 'PASS' : 'FAIL'}  ${foreground} on ${surface} ` +
-          `(${fg} on ${bg}) = ${ratio.toFixed(2)}:1`,
+        `  ${ok ? 'PASS' : 'FAIL'}  ${foreground} on ${surface} ` +
+          `(${tokens[foreground]} on ${tokens[surface]}) = ${ratio.toFixed(2)}:1`,
       );
     }
   }
-
-  console.log(`\n${checked - failures}/${checked} pairs meet AA (${THRESHOLD}:1).`);
-  process.exit(failures === 0 ? 0 : 1);
+  // The well is not a text surface: show the numbers, never fail on them.
+  for (const surface of NON_TEXT_SURFACES) {
+    for (const foreground of FOREGROUNDS) {
+      const ratio = contrast(tokens[foreground], tokens[surface]);
+      console.log(
+        `  info  ${foreground} on ${surface} ` +
+          `(${tokens[foreground]} on ${tokens[surface]}) = ${ratio.toFixed(2)}:1  (the well, not a text surface)`,
+      );
+    }
+  }
 }
 
-console.error(
-  'usage:\n' +
-    '  node scripts/contrast-check.mjs "#f2f2f2" "#181818"\n' +
-    '  node scripts/contrast-check.mjs --tokens src/styles/tokens.css',
+console.log(
+  `\n${checked - failures}/${checked} text pairs meet AA (${THRESHOLD}:1) across ` +
+    `${wanted.join(' + ')}.`,
 );
-process.exit(2);
+process.exit(failures === 0 ? 0 : 1);
